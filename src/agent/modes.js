@@ -4,6 +4,18 @@ import * as mc from '../utils/mcdata.js';
 import settings from './settings.js'
 import convoManager from './conversation.js';
 
+const zhDict = {
+    'cow': '牛', 'pig': '猪', 'sheep': '羊', 'chicken': '鸡', 'rabbit': '兔子', 'mooshroom': '哞菇', 'llama': '羊驼',
+    'zombie': '僵尸', 'skeleton': '骷髅', 'creeper': '苦力怕', 'spider': '蜘蛛', 'cave_spider': '洞穴蜘蛛',
+    'enderman': '末影人', 'witch': '女巫', 'slime': '史莱姆', 'phantom': '幻翼', 'drowned': '溺尸',
+    'item': '掉落物', 'zombified_piglin': '僵尸猪灵'
+};
+
+function t(name) {
+    if (!name) return '';
+    return zhDict[name.toLowerCase()] || name.replace(/_/g, " ");
+}
+
 async function say(agent, message) {
     agent.bot.modes.behavior_log += message + '\n';
     if (agent.shut_up || !settings.narrate_behavior) return;
@@ -48,13 +60,13 @@ const modes_list = [
             }
             else if (block.name === 'lava' || block.name === 'fire' ||
                 blockAbove.name === 'lava' || blockAbove.name === 'fire') {
-                say(agent, 'I\'m on fire!');
+                say(agent, '我着火啦！');
                 // if you have a water bucket, use it
                 let waterBucket = bot.inventory.items().find(item => item.name === 'water_bucket');
                 if (waterBucket) {
                     execute(this, agent, async () => {
                         let success = await skills.placeBlock(bot, 'water_bucket', block.position.x, block.position.y, block.position.z);
-                        if (success) say(agent, 'Placed some water, ahhhh that\'s better!');
+                        if (success) say(agent, '放了点水，呼，好多了！');
                     });
                 }
                 else {
@@ -62,14 +74,14 @@ const modes_list = [
                         let waterBucket = bot.inventory.items().find(item => item.name === 'water_bucket');
                         if (waterBucket) {
                             let success = await skills.placeBlock(bot, 'water_bucket', block.position.x, block.position.y, block.position.z);
-                            if (success) say(agent, 'Placed some water, ahhhh that\'s better!');
+                            if (success) say(agent, '放了点水，呼，好多了！');
                             return;
                         }
                         let nearestWater = world.getNearestBlock(bot, 'water', 20);
                         if (nearestWater) {
                             const pos = nearestWater.position;
                             let success = await skills.goToPosition(bot, pos.x, pos.y, pos.z, 0.2);
-                            if (success) say(agent, 'Found some water, ahhhh that\'s better!');
+                            if (success) say(agent, '找到水了，呼，好多了！');
                             return;
                         }
                         await skills.moveAway(bot, 5);
@@ -77,7 +89,7 @@ const modes_list = [
                 }
             }
             else if (Date.now() - bot.lastDamageTime < 3000 && (bot.health < 5 || bot.lastDamageTaken >= bot.health)) {
-                say(agent, 'I\'m dying!');
+                say(agent, '我要没血啦！');
                 execute(this, agent, async () => {
                     await skills.moveAway(bot, 20);
                 });
@@ -120,13 +132,13 @@ const modes_list = [
             }
             const max_stuck_time = cur_dig_block?.name === 'obsidian' ? this.max_stuck_time * 2 : this.max_stuck_time;
             if (this.stuck_time > max_stuck_time) {
-                say(agent, 'I\'m stuck!');
+                say(agent, '我好像卡住了！');
                 this.stuck_time = 0;
                 execute(this, agent, async () => {
                     const crashTimeout = setTimeout(() => { agent.cleanKill("Got stuck and couldn't get unstuck") }, 10000);
                     await skills.moveAway(bot, 5);
                     clearTimeout(crashTimeout);
-                    say(agent, 'I\'m free.');
+                    say(agent, '呼，终于出来了。');
                 });
             }
             this.last_time = Date.now();
@@ -146,7 +158,7 @@ const modes_list = [
         update: async function (agent) {
             const enemy = world.getNearestEntityWhere(agent.bot, entity => mc.isHostile(entity), 16);
             if (enemy && await world.isClearPath(agent.bot, enemy)) {
-                say(agent, `Aaa! A ${enemy.name.replace("_", " ")}!`);
+                say(agent, `啊！有 ${t(enemy.name)}！`);
                 execute(this, agent, async () => {
                     await skills.avoidEnemies(agent.bot, 24);
                 });
@@ -162,7 +174,7 @@ const modes_list = [
         update: async function (agent) {
             const enemy = world.getNearestEntityWhere(agent.bot, entity => mc.isHostile(entity), 8);
             if (enemy && await world.isClearPath(agent.bot, enemy)) {
-                say(agent, `Fighting ${enemy.name}!`);
+                say(agent, `正在攻击 ${t(enemy.name)}！`);
                 execute(this, agent, async () => {
                     await skills.defendSelf(agent.bot, 8);
                 });
@@ -179,7 +191,7 @@ const modes_list = [
             const huntable = world.getNearestEntityWhere(agent.bot, entity => mc.isHuntable(entity), 8);
             if (huntable && await world.isClearPath(agent.bot, huntable)) {
                 execute(this, agent, async () => {
-                    say(agent, `Hunting ${huntable.name}!`);
+                    say(agent, `正在狩猎 ${t(huntable.name)}！`);
                     await skills.attackEntity(agent.bot, huntable);
                 });
             }
@@ -203,7 +215,7 @@ const modes_list = [
                     this.noticed_at = Date.now();
                 }
                 if (Date.now() - this.noticed_at > this.wait * 1000) {
-                    say(agent, `Picking up item!`);
+                    say(agent, `正在捡起掉落物！`);
                     this.prev_item = item;
                     execute(this, agent, async () => {
                         await skills.pickupNearbyItems(agent.bot);
@@ -324,8 +336,8 @@ async function execute(mode, agent, func, timeout=-1) {
         // auto prompt to respond to the interruption
         let role = convoManager.inConversation() ? agent.last_sender : 'system';
         let logs = agent.bot.modes.flushBehaviorLog();
-        agent.handleMessage(role, `(AUTO MESSAGE)Your previous action '${interrupted_action}' was interrupted by ${mode.name}.
-        Your behavior log: ${logs}\nRespond accordingly.`);
+        agent.handleMessage(role, `(系统消息) 你的上一个动作 '${interrupted_action}' 被模式 ${mode.name} 中断了。
+        你的近期行为日志: ${logs}\n请据此做出后续反应。`);
     }
 }
 
