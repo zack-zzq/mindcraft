@@ -1,0 +1,20 @@
+{
+    "name": "kesti",
+    "model": {
+        "api": "openai",
+        "model": "doubao-seed-2-0-lite-260215",
+        "url": "https://ark.cn-beijing.volces.com/api/v3/"
+    },
+    "code_model": {
+        "api": "qwen",
+        "model": "qwen3-coder-next"
+    },
+    "vision_model": {
+        "api": "qwen",
+        "model": "qwen3-vl-plus-2025-12-19"
+    },
+    "embedding": {
+        "api": "ollama",
+        "model": "embeddinggemma"
+    }
+}
