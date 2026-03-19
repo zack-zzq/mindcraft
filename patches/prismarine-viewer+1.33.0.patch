@@ -1,5 +1,5 @@
 diff --git a/node_modules/prismarine-viewer/viewer/lib/entity/Entity.js b/node_modules/prismarine-viewer/viewer/lib/entity/Entity.js
-index 8945452..8d05027 100644
+index 8945452..1bd624e 100644
 --- a/node_modules/prismarine-viewer/viewer/lib/entity/Entity.js
 +++ b/node_modules/prismarine-viewer/viewer/lib/entity/Entity.js
 @@ -84,11 +84,11 @@ const elemFaces = {
@@ -25,6 +25,15 @@ index 8945452..8d05027 100644
    const bones = {}
  
    const geoData = {
+@@ -168,7 +168,7 @@ function getMesh (texture, jsonModel) {
+ 
+   const rootBones = []
+   for (const jsonBone of jsonModel.bones) {
+-    if (jsonBone.parent) bones[jsonBone.parent].add(bones[jsonBone.name])
++    if (jsonBone.parent && bones[jsonBone.parent]) bones[jsonBone.parent].add(bones[jsonBone.name])
+     else rootBones.push(bones[jsonBone.name])
+   }
+ 
 @@ -201,9 +201,12 @@ function getMesh (texture, jsonModel) {
  }
  

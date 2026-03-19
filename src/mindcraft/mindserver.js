@@ -139,8 +139,8 @@ export function createMindServer(host_public = false, port = 8080) {
         });
 
         socket.on('chat-message', (agentName, json) => {
-            if (!agent_connections[agentName]) {
-                console.warn(`Agent ${agentName} tried to send a message but is not logged in`);
+            if (!agent_connections[agentName] || !agent_connections[agentName].socket) {
+                console.warn(`Agent ${agentName} tried to send a message but its socket is not available`);
                 return;
             }
             console.log(`${curAgentName} sending message to ${agentName}: ${json.message}`);
@@ -193,20 +193,20 @@ export function createMindServer(host_public = false, port = 8080) {
                 console.log('Exiting MindServer');
                 process.exit(0);
             }, 2000);
-            
+
         });
 
-		socket.on('send-message', (agentName, data) => {
-			if (!agent_connections[agentName]) {
-				console.warn(`Agent ${agentName} not in game, cannot send message via MindServer.`);
-				return
-			}
-			try {
-				agent_connections[agentName].socket.emit('send-message', data)
-			} catch (error) {
-				console.error('Error: ', error);
-			}
-		});
+        socket.on('send-message', (agentName, data) => {
+            if (!agent_connections[agentName] || !agent_connections[agentName].socket) {
+                console.warn(`Agent ${agentName} not in game or missing socket, cannot send message via MindServer.`);
+                return
+            }
+            try {
+                agent_connections[agentName].socket.emit('send-message', data)
+            } catch (error) {
+                console.error('Error: ', error);
+            }
+        });
 
         socket.on('bot-output', (agentName, message) => {
             io.emit('bot-output', agentName, message);
@@ -236,7 +236,7 @@ function agentsStatusUpdate(socket) {
     for (let agentName in agent_connections) {
         const conn = agent_connections[agentName];
         agents.push({
-            name: agentName, 
+            name: agentName,
             in_game: conn.in_game,
             viewerPort: conn.viewer_port,
             socket_connected: !!conn.socket
